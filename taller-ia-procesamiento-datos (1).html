@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Taller: la IA en el procesamiento de datos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#0b1310; --surface:#111c17; --surface-2:#172620; --line:#25382f;
+  --text:#e9f3ed; --muted:#97b0a3; --accent:#2ee57a; --accent-ink:#04200f;
+  --accent-soft:rgba(46,229,122,.14); --amber:#ffcf5c; --coral:#ff7a6b; --sky:#6cc7ff; --violet:#b59cff;
+  --font-display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --font-body:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 var(--font-body);-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;margin:0 0 .5rem;letter-spacing:-.01em}
+h2{font-size:clamp(1.7rem,4vw,2.4rem);font-weight:800}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700;color:var(--muted)}
+p{margin:.25rem 0 .75rem}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.skip{position:absolute;left:-999px}
+.skip:focus{left:8px;top:8px;background:var(--accent);color:var(--accent-ink);padding:.4rem .8rem;border-radius:8px;z-index:50}
+
+/* Encabezado */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(11,19,16,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:.7rem 1rem .6rem}
+.top-row{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:.7rem;min-width:0}
+.mark{width:38px;height:38px;border-radius:50%;background:var(--accent);display:grid;place-items:center;flex:none}
+.mark svg{width:22px;height:22px}
+.brand strong{display:block;font:700 1.05rem/1.15 var(--font-display)}
+.brand small{color:var(--muted)}
+.clock{display:flex;align-items:center;gap:.8rem}
+.time{font:800 2.2rem/1 var(--font-display);font-variant-numeric:tabular-nums;color:var(--accent);min-width:5.2ch}
+.clock-meta{font-size:.85rem;color:var(--muted);max-width:26ch;line-height:1.3}
+.clock-meta .link{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;font-size:inherit}
+.ctl{display:flex;gap:.5rem}
+.btn{border:1px solid var(--line);background:var(--surface-2);padding:.55rem 1rem;border-radius:999px;font-weight:600;transition:background .15s,border-color .15s}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn-primary:hover:not(:disabled){background:#5cf09a}
+.btn-small{padding:.3rem .75rem;font-size:.88rem}
+.segs{max-width:1120px;margin:.6rem auto 0;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.seg{height:5px;background:var(--line);border-radius:3px;overflow:hidden}
+.seg i{display:block;height:100%;width:0;background:var(--accent)}
+
+/* Navegación */
+.wrap{max-width:1120px;margin:0 auto;padding:1rem}
+.tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.5rem;margin:.5rem 0 1.5rem}
+.tab{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.7rem .9rem;display:flex;flex-direction:column;gap:.1rem;transition:border-color .15s,background .15s}
+.tab span{font-size:.8rem;color:var(--muted)}
+.tab b{font:700 .95rem/1.2 var(--font-display)}
+.tab[aria-current="page"]{border-color:var(--accent);background:var(--accent-soft)}
+.tab.suggested span::after{content:' · ahora toca';color:var(--accent)}
+.tab.done b::after{content:' ✓';color:var(--accent)}
+
+/* Módulos */
+.mod-head{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;flex-wrap:wrap;margin-bottom:1rem}
+.mod-head p{max-width:62ch;color:var(--muted)}
+.time-chip{border:1px solid var(--accent);color:var(--accent);border-radius:999px;padding:.25rem .8rem;font-weight:700;white-space:nowrap}
+.plan{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.6rem;margin:0 0 1.5rem;padding:0;list-style:none}
+.plan li{border-left:3px solid var(--accent);padding:.2rem .8rem;background:var(--surface);border-radius:0 10px 10px 0;font-size:.93rem}
+.plan b{display:block;color:var(--accent)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:1.2rem}
+.panel+.panel{margin-top:1.2rem}
+.grid-2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.5rem;align-items:center}
+@media (max-width:820px){.grid-2{grid-template-columns:1fr}}
+.hint{color:var(--muted);font-size:.9rem}
+.chip{display:inline-block;padding:.15rem .65rem;border-radius:999px;border:1px solid var(--line);font-size:.82rem;background:var(--surface-2);margin:0 .25rem .25rem 0}
+.chip.ok{border-color:var(--accent);color:var(--accent)}
+.chip.warn{border-color:var(--amber);color:var(--amber)}
+.chip.bad{border-color:var(--coral);color:var(--coral)}
+.chip.sky{border-color:var(--sky);color:var(--sky)}
+
+/* Jerarquía */
+.nest{position:relative;width:min(100%,440px);aspect-ratio:1;margin-inline:auto}
+.ring{position:absolute;left:50%;bottom:0;transform:translateX(-50%);aspect-ratio:1;border-radius:50%;border:1.5px solid;display:flex;justify-content:center;align-items:flex-start;padding-top:4%;font:700 clamp(.72rem,2.3vw,.98rem)/1.1 var(--font-display);text-align:center;transition:box-shadow .2s,background .2s}
+.ring-ia{width:100%;background:rgba(46,229,122,.05);border-color:#2a4a3a}
+.ring-ml{width:76%;background:rgba(46,229,122,.10);border-color:#2f6e4b}
+.ring-dl{width:52%;background:rgba(46,229,122,.18);border-color:#2fa164}
+.ring-nlp{width:28%;background:rgba(46,229,122,.36);border-color:var(--accent);border-style:dashed;align-items:center;padding-top:0}
+.ring:hover{background-color:rgba(46,229,122,.22)}
+.ring.active{box-shadow:0 0 0 3px var(--accent-soft),inset 0 0 0 2px var(--accent)}
+.detail{background:var(--surface-2);border-radius:14px;padding:1.1rem 1.2rem;min-height:300px}
+.detail dl{margin:.6rem 0 0}
+.detail dt{font-weight:700;color:var(--accent);font-size:.9rem;margin-top:.6rem}
+.detail dd{margin:0}
+.think{margin-top:.8rem;padding:.6rem .8rem;border-radius:10px;background:var(--accent-soft)}
+.note{font-size:.85rem;color:var(--muted);border-top:1px dashed var(--line);margin-top:.8rem;padding-top:.6rem}
+
+/* Quiz */
+.quiz-top{display:flex;justify-content:space-between;color:var(--muted);font-size:.9rem;margin-bottom:.5rem}
+.qbar{height:4px;background:var(--line);border-radius:2px;margin-bottom:1rem}
+.qbar i{display:block;height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
+.opts{display:grid;gap:.5rem;margin:1rem 0}
+.opt{text-align:left;background:var(--surface-2);border:1.5px solid var(--line);border-radius:12px;padding:.7rem .9rem;transition:border-color .15s,background .15s}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--accent);background:var(--accent-soft)}
+.opt.wrong{border-color:var(--coral);background:rgba(255,122,107,.12)}
+.fb{padding:.7rem .9rem;border-radius:12px;background:var(--surface-2);border-left:4px solid var(--accent);margin-bottom:.8rem}
+.fb.no{border-left-color:var(--coral)}
+.score{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;margin-bottom:1rem}
+.score svg{width:110px;height:110px;flex:none}
+.score .big{font:800 2.4rem/1 var(--font-display)}
+.review{list-style:none;padding:0;margin:0 0 1rem;display:grid;gap:.5rem}
+.review li{padding:.6rem .8rem;border-radius:10px;background:var(--surface-2);border-left:4px solid var(--accent);font-size:.93rem}
+.review li.no{border-left-color:var(--coral)}
+
+/* Flujo (módulo 2) */
+.flow{display:flex;flex-wrap:wrap;gap:.5rem;list-style:none;padding:0;margin:0 0 1.2rem;align-items:stretch}
+.flow li{display:flex;align-items:center;gap:.5rem}
+.flow li:not(:last-child)::after{content:'';width:22px;height:2px;background:var(--line)}
+.node{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:.6rem .9rem;text-align:left;min-width:128px}
+.node span{display:block;font-size:.78rem;color:var(--muted)}
+.node b{font:700 .95rem/1.2 var(--font-display)}
+.node[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.io{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:1rem;align-items:start}
+@media (max-width:900px){.io{grid-template-columns:1fr}.io-mid{justify-self:start}}
+.io h4{margin-bottom:.4rem}
+.io-mid{align-self:center}
+.empty{border:1.5px dashed var(--line);border-radius:12px;padding:1.2rem;color:var(--muted);text-align:center}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;max-width:100%}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{padding:.45rem .7rem;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:var(--surface-2);color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+tr.hl td{background:rgba(255,207,92,.13)}
+tr.gone td{opacity:.4;text-decoration:line-through}
+td.chg{background:var(--accent-soft);color:var(--accent);font-weight:600}
+td.miss{color:var(--coral)}
+.explain{margin-top:1rem;padding:.8rem 1rem;border-radius:12px;background:var(--surface-2);border-left:4px solid var(--accent)}
+.explain b{color:var(--accent)}
+.controls{display:flex;flex-wrap:wrap;gap:.8rem 1.2rem;align-items:center;margin:0 0 1rem}
+.controls label{display:flex;align-items:center;gap:.4rem;font-size:.92rem}
+input[type=number],select{background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:.35rem .5rem;font:inherit}
+input[type=range]{accent-color:var(--accent);vertical-align:middle}
+input[type=checkbox]{accent-color:var(--accent);width:1.05rem;height:1.05rem}
+.subtabs{display:flex;gap:.4rem;margin-bottom:1rem;flex-wrap:wrap}
+.subtabs button{border:1px solid var(--line);background:none;border-radius:999px;padding:.3rem .9rem}
+.subtabs button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:.4rem 1rem;margin-top:.6rem;font-size:.88rem}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:.35rem;vertical-align:-1px}
+svg text{fill:var(--muted);font:11px var(--font-body)}
+.chart{width:100%;height:auto;display:block}
+
+/* Árbol */
+.tree{font-size:.93rem}
+.tn{display:inline-block;border:1.5px solid var(--line);border-radius:10px;padding:.35rem .7rem;background:var(--surface-2);transition:all .2s}
+.tn.on{border-color:var(--accent);background:var(--accent-soft)}
+.tn.leaf.on.bad{border-color:var(--coral);background:rgba(255,122,107,.16)}
+.tn.leaf.on.warn{border-color:var(--amber);background:rgba(255,207,92,.16)}
+.tb{margin-left:1rem;padding-left:1rem;border-left:2px solid var(--line);display:grid;gap:.6rem;margin-top:.5rem}
+.bl{display:inline-block;font-size:.8rem;color:var(--muted);margin-right:.5rem}
+
+/* OCR */
+.paper{background:#e8e5da;color:#222;border-radius:6px;padding:1rem 1.1rem;font:500 .92rem/1.5 'Courier New',monospace;max-width:340px}
+.paper .ln{padding:1px 4px;border:2px solid transparent;border-radius:3px;display:flex;justify-content:space-between;gap:1rem}
+.paper.read .ln[data-f]{border-color:#1ba85a;background:rgba(46,229,122,.2)}
+.paper hr{border:0;border-top:1px dashed #888;margin:.5rem 0}
+.kw-pos{color:var(--accent);font-weight:700}
+.kw-neg{color:var(--coral);font-weight:700}
+.rev{padding:.6rem .8rem;border-radius:10px;background:var(--surface-2);margin-bottom:.5rem}
+.bars{display:grid;gap:.4rem;margin-top:.6rem}
+.bar-row{display:grid;grid-template-columns:70px 1fr 70px;gap:.5rem;align-items:center;font-size:.88rem}
+.bar-track{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--line)}
+.bar-track i{display:block;height:100%}
+
+/* Spotify */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.5rem;margin-bottom:1rem}
+.step{background:var(--surface-2);border:1.5px solid var(--line);border-radius:12px;padding:.6rem .8rem;text-align:left}
+.step span{display:block;font-size:.78rem;color:var(--muted)}
+.step b{font:700 .95rem/1.2 var(--font-display)}
+.step[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.io-line{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.8rem}
+@media (max-width:600px){.io-line{grid-template-columns:1fr}}
+.io-line div{background:var(--surface-2);border-radius:10px;padding:.5rem .8rem}
+.io-line small{display:block;color:var(--muted)}
+.pick{display:flex;flex-wrap:wrap;gap:.4rem;margin:.4rem 0 1rem}
+.tag{border:1.5px solid var(--line);background:var(--surface-2);border-radius:999px;padding:.3rem .9rem}
+.tag[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.tag.mood[aria-pressed="true"]{background:var(--violet);border-color:var(--violet)}
+.sim-step{border:1px solid var(--line);border-radius:14px;padding:.9rem 1rem;margin-top:.8rem;background:var(--surface-2)}
+.sim-step.pending{opacity:.35}
+.sim-step h4{color:var(--text)}
+.sim-step h4 span{color:var(--accent)}
+.sim-bar{display:grid;grid-template-columns:150px 1fr 48px;gap:.6rem;align-items:center;font-size:.88rem;margin:.25rem 0}
+@media (max-width:600px){.sim-bar{grid-template-columns:100px 1fr 40px}}
+.track{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+.track i{display:block;height:100%;background:var(--accent);border-radius:5px}
+.rec{display:grid;grid-template-columns:auto 1fr auto;gap:.2rem .8rem;align-items:center;padding:.6rem .2rem;border-bottom:1px solid var(--line)}
+.rec:last-child{border-bottom:0}
+.rec .n{font:800 1.3rem var(--font-display);color:var(--accent);width:1.6rem}
+.rec .pct{font:800 1.2rem var(--font-display);color:var(--accent)}
+.rec small{color:var(--muted);grid-column:2/4}
+
+/* Pie */
+.pager{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin:2rem 0 1rem;padding-top:1rem;border-top:1px solid var(--line)}
+.pager .where{color:var(--muted);font-size:.9rem;text-align:center}
+.takeaways{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.8rem;margin-top:1rem}
+.takeaways div{padding:.8rem 1rem;border-radius:12px;background:var(--surface-2);border-top:3px solid var(--accent)}
+.takeaways b{display:block;font-family:var(--font-display)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+
+<header class="top">
+  <div class="top-row">
+    <div class="brand">
+      <div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#04200f" stroke-width="2.4" stroke-linecap="round"><path d="M4 9c5-2 11-1.500 16 1M5 14c4.500-1.500 9-1 13 1M6.500 18.500c3.500-1 6.500-.8 9.500.8"/></svg></div>
+      <div><strong>La IA en el procesamiento de datos</strong><small>Taller práctico de 60 minutos · Gaes 1</small></div>
+    </div>
+    <div class="clock">
+      <div class="time" id="time" role="timer" aria-label="Tiempo restante de la sesión">60:00</div>
+      <div class="clock-meta" id="clockMeta">Pulsa «Iniciar» para arrancar la sesión.</div>
+    </div>
+    <div class="ctl">
+      <button class="btn btn-primary" id="btnStart">Iniciar</button>
+      <button class="btn" id="btnReset">Reiniciar</button>
+    </div>
+  </div>
+  <div class="segs" id="segs" aria-hidden="true"><div class="seg"><i></i></div><div class="seg"><i></i></div><div class="seg"><i></i></div><div class="seg"><i></i></div></div>
+</header>
+
+<div class="wrap">
+  <nav class="tabs" id="tabs" aria-label="Módulos de la sesión">
+    <button class="tab" data-i="0"><span>Módulo 1 · 0–15 min</span><b>Fundamentos</b></button>
+    <button class="tab" data-i="1"><span>Módulo 2 · 15–30 min</span><b>Funciones del procesamiento</b></button>
+    <button class="tab" data-i="2"><span>Módulo 3 · 30–45 min</span><b>Caso práctico Spotify</b></button>
+    <button class="tab" data-i="3"><span>Módulo 4 · 45–60 min</span><b>Evaluación y cierre</b></button>
+  </nav>
+
+  <main id="main">
+    <!-- MÓDULO 1 -->
+    <section class="module" id="m1">
+      <div class="mod-head">
+        <div>
+          <h2>Fundamentos y componentes clave</h2>
+          <p>La Inteligencia Artificial desarrolla sistemas capaces de simular el pensamiento humano y de aprender analizando datos de forma continua. Dentro de ella conviven tres componentes que vas a explorar tocando cada capa.</p>
+        </div>
+        <span class="time-chip">Minutos 0–15</span>
+      </div>
+      <ul class="plan">
+        <li><b>0–5 min</b>Explora la jerarquía capa por capa.</li>
+        <li><b>5–10 min</b>Responde las preguntas de reflexión en voz alta.</li>
+        <li><b>10–15 min</b>Contesta el quiz rápido.</li>
+      </ul>
+      <div class="panel">
+        <div class="grid-2">
+          <div>
+            <div class="nest" id="nest">
+              <button class="ring ring-ia" data-k="ia" aria-label="Inteligencia Artificial">Inteligencia Artificial</button>
+              <button class="ring ring-ml" data-k="ml" aria-label="Machine Learning">Machine Learning</button>
+              <button class="ring ring-dl" data-k="dl" aria-label="Deep Learning">Deep Learning</button>
+              <button class="ring ring-nlp" data-k="nlp" aria-label="Procesamiento del Lenguaje Natural">NLP</button>
+            </div>
+            <p class="hint" id="seen" style="text-align:center;margin-top:.8rem"></p>
+          </div>
+          <div class="detail" id="layerDetail" aria-live="polite"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Quiz rápido de retroalimentación</h3>
+        <p class="hint">Tres preguntas para validar lo que acabas de explorar.</p>
+        <div id="quiz1"></div>
+      </div>
+    </section>
+
+    <!-- MÓDULO 2 -->
+    <section class="module" id="m2" hidden>
+      <div class="mod-head">
+        <div>
+          <h2>Funciones del procesamiento de datos</h2>
+          <p>La IA no solo acelera el análisis: optimiza todo el ciclo de vida del dato. Haz clic en cada etapa, pulsa «Ejecutar» y compara la entrada con la salida.</p>
+        </div>
+        <span class="time-chip">Minutos 15–30</span>
+      </div>
+      <ul class="plan">
+        <li><b>15–18 min</b>Recorre el flujo completo de izquierda a derecha.</li>
+        <li><b>18–27 min</b>Juega con los controles de cada etapa.</li>
+        <li><b>27–30 min</b>Elige la etapa más útil para un proyecto tuyo.</li>
+      </ul>
+      <ol class="flow" id="flow"></ol>
+      <div class="panel" id="stageBody"></div>
+    </section>
+
+    <!-- MÓDULO 3 -->
+    <section class="module" id="m3" hidden>
+      <div class="mod-head">
+        <div>
+          <h2>Caso práctico: Spotify y el Descubrimiento Semanal</h2>
+          <p>Cada semana Spotify te entrega una lista personalizada. Detrás hay cuatro funciones del procesamiento de datos trabajando en cadena. Primero desglósalas; después simula tu propia recomendación.</p>
+        </div>
+        <span class="time-chip">Minutos 30–45</span>
+      </div>
+      <ul class="plan">
+        <li><b>30–35 min</b>Desglosa las cuatro funciones del caso.</li>
+        <li><b>35–42 min</b>Elige géneros y estados de ánimo y genera tu lista.</li>
+        <li><b>42–45 min</b>Cambia el nivel de aventura y compara resultados.</li>
+      </ul>
+      <div class="panel">
+        <h3>Desglose del caso</h3>
+        <div class="steps" id="spSteps"></div>
+        <div id="spDetail" aria-live="polite"></div>
+      </div>
+      <div class="panel">
+        <h3>Ejercicio: genera tu Descubrimiento Semanal</h3>
+        <p class="hint">Simulación didáctica con artistas ficticios y reglas simplificadas. El sistema real de Spotify es mucho más complejo.</p>
+        <h4>1. Elige tus géneros (mínimo uno)</h4>
+        <div class="pick" id="pickG"></div>
+        <h4>2. Elige cómo quieres sentirte</h4>
+        <div class="pick" id="pickM"></div>
+        <h4>3. ¿Cuánta novedad quieres?</h4>
+        <div class="controls">
+          <label>Conservador <input type="range" id="adv" min="0" max="100" value="40" aria-label="Nivel de novedad"> Aventurero</label>
+          <button class="btn btn-primary" id="simGo" disabled>Generar mi lista</button>
+        </div>
+        <p class="hint" id="simHint">Selecciona al menos un género para empezar.</p>
+        <div id="simOut" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- MÓDULO 4 -->
+    <section class="module" id="m4" hidden>
+      <div class="mod-head">
+        <div>
+          <h2>Evaluación y cierre</h2>
+          <p>Cinco preguntas sobre los beneficios clave de la IA en el procesamiento de datos. Recibes la puntuación y la explicación de cada respuesta al instante.</p>
+        </div>
+        <span class="time-chip">Minutos 45–60</span>
+      </div>
+      <ul class="plan">
+        <li><b>45–55 min</b>Cuestionario final.</li>
+        <li><b>55–58 min</b>Revisa los errores y sus explicaciones.</li>
+        <li><b>58–60 min</b>Comparte tu conclusión con el grupo.</li>
+      </ul>
+      <div class="panel">
+        <div id="quiz4"></div>
+      </div>
+      <div class="panel">
+        <h3>Lo esencial para llevarte</h3>
+        <div class="takeaways">
+          <div><b>Dato bruto → conocimiento</b>La IA transforma datos sin procesar en conocimiento estratégico.</div>
+          <div><b>Menos error, más escala</b>Automatiza tareas complejas y reduce el margen de error humano.</div>
+          <div><b>Innovación transversal</b>Impulsa avances en salud, gobierno y sectores empresariales.</div>
+        </div>
+        <div class="controls" style="margin-top:1.2rem">
+          <button class="btn" id="restartAll">Volver al módulo 1</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="pager">
+    <button class="btn" id="prev">Módulo anterior</button>
+    <div class="where" id="where"></div>
+    <button class="btn btn-primary" id="next">Siguiente módulo</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ---------- Utilidades ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const fmt=n=>Math.round(n).toLocaleString('es-CO');
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const med=a=>{const s=[...a].sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const tbl=(heads,rows)=>`<div class="tbl-wrap"><table><thead><tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr${r.cls?` class="${r.cls}"`:''}>${r.cells.map(c=>Array.isArray(c)?`<td class="${c[1]}">${c[0]}</td>`:`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+const done=new Set();
+
+/* ---------- Temporizador y navegación ---------- */
+const TOTAL=3600000, MOD_MS=900000;
+let elapsed=0, startedAt=null, cur=0;
+const getElapsed=()=>Math.min(TOTAL,elapsed+(startedAt?Date.now()-startedAt:0));
+function renderClock(){
+  const e=getElapsed(), rem=Math.ceil((TOTAL-e)/1000);
+  $('#time').textContent=pad(Math.floor(rem/60))+':'+pad(rem%60);
+  $$('.seg i').forEach((b,i)=>b.style.width=(clamp((e-i*MOD_MS)/MOD_MS,0,1)*100)+'%');
+  const s=Math.min(3,Math.floor(e/MOD_MS));
+  const left=Math.ceil(((s+1)*MOD_MS-e)/60000);
+  let meta;
+  if(e>=TOTAL){meta='Tiempo cumplido. Cierra con tus conclusiones.';if(startedAt)stopClock()}
+  else if(!startedAt&&e===0)meta='Pulsa «Iniciar» para arrancar la sesión.';
+  else if(!startedAt)meta='En pausa. Pulsa «Reanudar» para continuar.';
+  else meta=`Cronograma: módulo ${s+1}, quedan ${left} min.`;
+  if(s!==cur&&(startedAt||e>0)&&e<TOTAL)meta+=` <button class="link" id="jump">Ir al módulo ${s+1}</button>`;
+  $('#clockMeta').innerHTML=meta;
+  const j=$('#jump'); if(j)j.onclick=()=>go(s);
+  $$('.tab').forEach((t,i)=>t.classList.toggle('suggested',(startedAt||e>0)&&e<TOTAL&&i===s));
+  $('#btnStart').textContent=startedAt?'Pausar':(e>0&&e<TOTAL?'Reanudar':'Iniciar');
+}
+let tick=null;
+function startClock(){if(startedAt)return;startedAt=Date.now();tick=setInterval(renderClock,250);renderClock()}
+function stopClock(){if(!startedAt)return;elapsed=getElapsed();startedAt=null;clearInterval(tick);renderClock()}
+$('#btnStart').onclick=()=>startedAt?stopClock():(getElapsed()>=TOTAL?0:startClock());
+$('#btnReset').onclick=()=>{clearInterval(tick);startedAt=null;elapsed=0;renderClock()};
+
+const MODS=['Fundamentos y componentes clave','Funciones del procesamiento de datos','Caso práctico Spotify','Evaluación y cierre'];
+function go(i,scroll=true){
+  cur=clamp(i,0,3);
+  $$('.module').forEach((m,k)=>m.hidden=k!==cur);
+  $$('.tab').forEach((t,k)=>{k===cur?t.setAttribute('aria-current','page'):t.removeAttribute('aria-current')});
+  $('#prev').disabled=cur===0;$('#next').disabled=cur===3;
+  $('#where').textContent=`Módulo ${cur+1} de 4 · ${MODS[cur]}`;
+  if(scroll)window.scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'});
+  renderClock();
+}
+$$('.tab').forEach(t=>t.onclick=()=>go(+t.dataset.i));
+$('#prev').onclick=()=>go(cur-1);
+$('#next').onclick=()=>go(cur+1);
+
+function markDone(i){done.add(i);$$('.tab')[i].classList.add('done')}
+
+/* ---------- Componente de quiz ---------- */
+function createQuiz(root,questions,{onDone,retry='Repetir el quiz'}={}){
+  let order,i,score,answers;
+  function start(){i=0;score=0;answers=[];order=questions.map(q=>({...q,opts:shuffle(q.opts.map((t,idx)=>({t,ok:idx===q.ok})))}));draw()}
+  function draw(){
+    if(i>=order.length)return summary();
+    const q=order[i];
+    root.innerHTML=`<div class="quiz-top"><span>Pregunta ${i+1} de ${order.length}</span><span>Aciertos: ${score}</span></div>
+      <div class="qbar"><i style="width:${i/order.length*100}%"></i></div>
+      <h3>${esc(q.q)}</h3>
+      <div class="opts">${q.opts.map((o,k)=>`<button class="opt" data-k="${k}">${esc(o.t)}</button>`).join('')}</div>
+      <div id="qfb"></div>`;
+    $$('.opt',root).forEach(b=>b.onclick=()=>pick(+b.dataset.k));
+  }
+  function pick(k){
+    const q=order[i],ok=q.opts[k].ok;
+    if(ok)score++;
+    answers.push({q:q.q,ok,correct:q.opts.find(o=>o.ok).t,why:q.why});
+    $$('.opt',root).forEach((b,idx)=>{b.disabled=true;if(q.opts[idx].ok)b.classList.add('right');else if(idx===k)b.classList.add('wrong')});
+    const last=i===order.length-1;
+    $('#qfb',root).innerHTML=`<div class="fb ${ok?'':'no'}"><b>${ok?'¡Correcto!':'Casi.'}</b> ${ok?'':'La respuesta correcta es: <em>'+esc(answers[answers.length-1].correct)+'</em>. '}${esc(q.why)}</div>
+      <button class="btn btn-primary" id="qnext">${last?'Ver resultado':'Siguiente pregunta'}</button>`;
+    $('#qnext',root).onclick=()=>{i++;draw()};
+    $('#qnext',root).focus({preventScroll:true});
+  }
+  function summary(){
+    const n=order.length,pct=score/n,C=2*Math.PI*46;
+    const msg=pct===1?'¡Dominas el tema! Respondiste todo sin fallar.':pct>=.6?'Buen resultado. Revisa las preguntas que fallaste para afianzar.':'Vale la pena repasar los módulos anteriores y volver a intentarlo.';
+    root.innerHTML=`<div class="score">
+      <svg viewBox="0 0 110 110" role="img" aria-label="${score} de ${n}"><circle cx="55" cy="55" r="46" fill="none" stroke="#25382f" stroke-width="10"/><circle cx="55" cy="55" r="46" fill="none" stroke="#2ee57a" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C*pct} ${C}" transform="rotate(-90 55 55)"/><text x="55" y="63" text-anchor="middle" style="font:800 26px var(--font-display);fill:#e9f3ed">${score}/${n}</text></svg>
+      <div><div class="big">${Math.round(pct*100)} %</div><p>${msg}</p></div></div>
+      <ul class="review">${answers.map(a=>`<li class="${a.ok?'':'no'}"><b>${a.ok?'✓':'✗'} ${esc(a.q)}</b><br>${a.ok?'':'Respuesta correcta: '+esc(a.correct)+'. '}${esc(a.why)}</li>`).join('')}</ul>
+      <button class="btn" id="qretry">${retry}</button>`;
+    $('#qretry',root).onclick=start;
+    if(onDone)onDone(score,n);
+  }
+  start();
+}
+
+/* ---------- MÓDULO 1 ---------- */
+(function(){
+  const L={
+    ia:{n:'Inteligencia Artificial (IA)',lv:'Nivel 1 · el paraguas',d:'Rama de la informática orientada a desarrollar sistemas capaces de simular el pensamiento humano y aprender mediante el análisis continuo de datos.',r:'Gestiona enormes volúmenes de datos con mayor rapidez y optimiza su ciclo de vida, desde la limpieza hasta la predicción.',e:'Un sistema antifraude que revisa millones de transacciones al día.',q:'¿Dónde ves IA en tu rutina diaria sin darte cuenta?'},
+    ml:{n:'Machine Learning (Aprendizaje Automático)',lv:'Nivel 2 · dentro de la IA',d:'Entrena algoritmos con datos para mejorar sin programación explícita.',r:'Aprende patrones del historial para clasificar, segmentar y predecir.',e:'Un modelo que anticipa qué clientes cancelarán su suscripción según su historial.',q:'¿Qué datos históricos necesitaría un modelo para predecir las ventas de una tienda?'},
+    dl:{n:'Deep Learning (Aprendizaje Profundo)',lv:'Nivel 3 · dentro del Machine Learning',d:'Subcampo avanzado basado en redes neuronales complejas.',r:'Procesa datos no estructurados (imágenes, audio, texto) con muchas capas de neuronas artificiales.',e:'El reconocimiento facial que desbloquea un teléfono.',q:'¿Por qué crees que el Deep Learning necesita muchos más datos que un árbol de decisión?'},
+    nlp:{n:'NLP (Procesamiento del Lenguaje Natural)',lv:'Aplicación · se apoya en Deep Learning',d:'Interpretación y generación del lenguaje humano.',r:'Convierte texto y voz en datos analizables: asistentes virtuales, traducción automática, análisis de sentimientos y generación de contenido.',e:'Analizar miles de reseñas para saber si los clientes están satisfechos.',q:'¿Qué diferencia hay entre entender un texto y generarlo?',note:'NLP es un campo de la IA que hoy se apoya sobre todo en Deep Learning, por eso aparece en el centro del esquema. También existe NLP con ML clásico y reglas.'}
+  };
+  const seen=new Set();
+  function show(k){
+    const x=L[k];seen.add(k);
+    $('#layerDetail').innerHTML=`<span class="chip ok">${x.lv}</span><h3>${x.n}</h3><p>${x.d}</p>
+      <dl><dt>En el procesamiento de datos</dt><dd>${x.r}</dd><dt>Ejemplo</dt><dd>${x.e}</dd></dl>
+      <div class="think"><b>Para pensar:</b> ${x.q}</div>${x.note?`<p class="note">${x.note}</p>`:''}`;
+    $$('.ring').forEach(r=>r.classList.toggle('active',r.dataset.k===k));
+    $('#seen').textContent=`${seen.size} de 4 capas exploradas`;
+  }
+  $$('.ring').forEach(r=>r.onclick=()=>show(r.dataset.k));
+  show('ia');
+  createQuiz($('#quiz1'),[
+    {q:'¿Qué describe mejor al Machine Learning?',opts:['Programar reglas fijas para cada caso posible','Entrenar algoritmos con datos para mejorar sin programación explícita','Guardar datos en tablas relacionales','Diseñar interfaces de usuario'],ok:1,why:'El ML aprende patrones a partir de los datos en lugar de depender de reglas escritas una por una.'},
+    {q:'El Deep Learning es…',opts:['Un reemplazo del ML que no necesita datos','Un lenguaje de programación para la web','Un subcampo avanzado basado en redes neuronales complejas','Un tipo de base de datos'],ok:2,why:'Es un subcampo del Machine Learning que usa redes neuronales de muchas capas.'},
+    {q:'¿Cuál es la función principal del NLP?',opts:['Reconocer objetos en imágenes','Normalizar variables numéricas','Segmentar clientes por gasto','Interpretar y generar lenguaje humano'],ok:3,why:'El NLP trabaja con texto y voz: asistentes virtuales, traducción y análisis de sentimientos.'}
+  ],{onDone:()=>markDone(0)});
+})();
+
+/* ---------- MÓDULO 2 ---------- */
+const STAGES=[
+  {id:'auto',s:'Etapa 1',n:'Automatización del análisis'},
+  {id:'clean',s:'Etapa 2',n:'Limpieza y transformación'},
+  {id:'class',s:'Etapa 3',n:'Clasificación y segmentación'},
+  {id:'pred',s:'Etapa 4',n:'Predicción y prescripción'},
+  {id:'unstr',s:'Etapa 5',n:'Datos no estructurados'}
+];
+const ioShell=(ctl,runLabel='Ejecutar')=>`${ctl?`<div class="controls">${ctl}</div>`:''}<div class="io"><div><h4>Entrada</h4><div class="in"></div></div><div class="io-mid"><button class="btn btn-primary run">${runLabel}</button></div><div><h4>Salida</h4><div class="out"><div class="empty">Pulsa «${runLabel}» para ver el resultado.</div></div></div></div><div class="explain"></div>`;
+
+/* Etapa 1: automatización */
+function stageAuto(root){
+  let rows=[['T-101',42000,'Bogotá'],['T-102',38000,'Medellín'],['T-103',55000,'Cali'],['T-104',47000,'Bogotá'],['T-105',51000,'Cali'],['T-106',9800000,'Barranquilla'],['T-107',44000,'Bogotá'],['T-108',40000,'Medellín']].map(([id,m,c])=>({id,m,c}));
+  let ran=false,n=109;
+  root.innerHTML=ioShell(`<label>Prueba un monto (COP): <input type="number" class="amt" min="1" value="52000"></label><button class="btn btn-small add">Agregar y analizar</button>`,'Detectar anomalías');
+  const inn=$('.in',root),out=$('.out',root),exp=$('.explain',root);
+  exp.innerHTML='<b>Qué ocurre:</b> el modelo aprende qué es «normal» (mediana y desviación robusta de los montos) y marca lo que se aleja demasiado. En producción hace esto sobre millones de registros en segundos.';
+  function draw(){
+    inn.innerHTML=tbl(['ID','Ciudad','Monto (COP)'],rows.map(r=>({cells:[r.id,r.c,fmt(r.m)]})));
+    if(!ran)return;
+    const m=med(rows.map(r=>r.m)),mad=med(rows.map(r=>Math.abs(r.m-m)))||1;
+    const a=rows.map(r=>({...r,z:Math.abs(0.6745*(r.m-m)/mad)}));
+    const bad=a.filter(r=>r.z>3.5).length;
+    out.innerHTML=tbl(['ID','Monto (COP)','Puntaje de rareza','Estado'],a.map(r=>({cls:r.z>3.5?'hl':'',cells:[r.id,fmt(r.m),r.z>99?'99+':r.z.toFixed(1),r.z>3.5?'<span class="chip warn">Anomalía</span>':'<span class="chip ok">Normal</span>']})))+`<p style="margin-top:.6rem"><b>${bad}</b> ${bad===1?'anomalía detectada':'anomalías detectadas'} en ${rows.length} registros. Umbral de rareza: 3,5.</p>`;
+  }
+  $('.run',root).onclick=()=>{ran=true;draw()};
+  $('.add',root).onclick=()=>{const v=Number($('.amt',root).value);if(!(v>0))return;rows.push({id:'T-'+n++,m:Math.round(v),c:['Bogotá','Cali','Medellín'][n%3]});ran=true;draw()};
+  draw();
+}
+
+/* Etapa 2: limpieza */
+function stageClean(root){
+  const RAW=[{id:1,nombre:'  ana pérez ',edad:28,ciudad:'BOGOTA',ingreso:'2.400.000'},{id:2,nombre:'Luis Mora',edad:null,ciudad:'bogotá',ingreso:'3100000'},{id:3,nombre:'Ana Pérez',edad:28,ciudad:'Bogotá',ingreso:'2.400.000'},{id:4,nombre:'Carla Ruiz',edad:34,ciudad:'Medellin',ingreso:null},{id:5,nombre:'Jorge Díaz',edad:41,ciudad:'cali',ingreso:'4,200,000'},{id:6,nombre:'Sofía Gil',edad:23,ciudad:'Cali ',ingreso:'1.800.000'}];
+  const CITY={bogota:'Bogotá',medellin:'Medellín',cali:'Cali'};
+  const strip=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
+  const cap=s=>s.trim().split(/\s+/).map(w=>w[0].toUpperCase()+w.slice(1).toLowerCase()).join(' ');
+  const parse=v=>v==null?null:Number(String(v).replace(/[.,]/g,''));
+  let ran=false;
+  root.innerHTML=ioShell(`<label><input type="checkbox" data-op="fmt" checked> Formato de texto</label><label><input type="checkbox" data-op="dup" checked> Quitar duplicados</label><label><input type="checkbox" data-op="fill" checked> Completar faltantes</label><label><input type="checkbox" data-op="norm" checked> Normalizar ingreso (0–1)</label>`,'Limpiar datos');
+  const inn=$('.in',root),out=$('.out',root);
+  $('.explain',root).innerHTML='<b>Qué ocurre:</b> la IA detecta errores de formato, elimina duplicados, completa valores faltantes con la mediana y normaliza variables para que los modelos posteriores funcionen bien. Activa y desactiva operaciones para ver su efecto.';
+  inn.innerHTML=tbl(['ID','Nombre','Edad','Ciudad','Ingreso'],RAW.map(r=>({cells:[r.id,`«${esc(r.nombre)}»`,r.edad==null?['vacío','miss']:r.edad,`«${esc(r.ciudad)}»`,r.ingreso==null?['vacío','miss']:esc(r.ingreso)]})));
+  function run(){
+    const ops={};$$('input[data-op]',root).forEach(c=>ops[c.dataset.op]=c.checked);
+    const o=RAW.map(r=>({...r,num:parse(r.ingreso),rm:false,ch:{}}));
+    if(ops.fmt)o.forEach(r=>{const nn=cap(r.nombre);if(nn!==r.nombre)r.ch.nombre=1;r.nombre=nn;const c=CITY[strip(r.ciudad)]||cap(r.ciudad);if(c!==r.ciudad)r.ch.ciudad=1;r.ciudad=c});
+    if(ops.dup){const seen=new Set();o.forEach(r=>{const k=strip(r.nombre)+'|'+r.edad;if(seen.has(k))r.rm=true;else seen.add(k)})}
+    const kept=()=>o.filter(r=>!r.rm);
+    if(ops.fill){const ma=med(kept().map(r=>r.edad).filter(v=>v!=null)),mi=med(kept().map(r=>r.num).filter(v=>v!=null));kept().forEach(r=>{if(r.edad==null){r.edad=ma;r.ch.edad=1}if(r.num==null){r.num=mi;r.ingreso=fmt(mi);r.ch.ingreso=1}})}
+    let lo=0,hi=1;
+    if(ops.norm){const v=kept().map(r=>r.num).filter(x=>x!=null);lo=Math.min(...v);hi=Math.max(...v)}
+    const miss=kept().filter(r=>r.edad==null||r.num==null).length+kept().filter(r=>r.edad==null&&r.num==null).length;
+    const missCount=kept().reduce((a,r)=>a+(r.edad==null?1:0)+(r.num==null?1:0),0);
+    out.innerHTML=tbl(['ID','Nombre','Edad','Ciudad',ops.norm?'Ingreso (0–1)':'Ingreso'],o.map(r=>({cls:r.rm?'gone':'',cells:[r.id,[esc(r.nombre),r.ch.nombre?'chg':''],r.edad==null?['vacío','miss']:[r.edad,r.ch.edad?'chg':''],[esc(r.ciudad),r.ch.ciudad?'chg':''],r.num==null?['vacío','miss']:ops.norm?[((r.num-lo)/(hi-lo)).toFixed(2),'chg']:[esc(r.ingreso==null?fmt(r.num):r.ingreso),r.ch.ingreso?'chg':'']]})))+`<p style="margin-top:.6rem">Filas: <b>${RAW.length} → ${kept().length}</b> · Valores faltantes: <b>2 → ${missCount}</b>. Las celdas verdes fueron modificadas.</p>`;
+    ran=true;
+  }
+  $('.run',root).onclick=run;
+  $$('input[data-op]',root).forEach(c=>c.onchange=()=>{if(ran)run()});
+}
+
+/* Etapa 3: clasificación y segmentación */
+function stageClass(root){
+  const r=rng(7),P=[];
+  [[2.5,30,8],[8.5,70,8],[5.5,150,8]].forEach(([cx,cy,k])=>{for(let i=0;i<k;i++)P.push([clamp(cx+(r()-.5)*2.8,.6,11.6),clamp(cy+(r()-.5)*44,8,196)])});
+  const COL=['#2ee57a','#6cc7ff','#ffcf5c','#ff7a6b','#b59cff'];
+  let mode='km',k=3,ran=false;
+  function kmeans(k){
+    const N=P.map(([x,y])=>[x/12,y/200]),d=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+    let C=[N[0]];
+    while(C.length<k){let bi=0,bd=-1;N.forEach((p,i)=>{const m=Math.min(...C.map(c=>d(p,c)));if(m>bd){bd=m;bi=i}});C.push(N[bi])}
+    let A=[];
+    for(let it=0;it<30;it++){
+      A=N.map(p=>{let b=0;C.forEach((c,j)=>{if(d(p,c)<d(p,C[b]))b=j});return b});
+      C=C.map((c,j)=>{const m=N.filter((_,i)=>A[i]===j);return m.length?[m.reduce((s,p)=>s+p[0],0)/m.length,m.reduce((s,p)=>s+p[1],0)/m.length]:c});
+    }
+    return{A,C:C.map(c=>[c[0]*12,c[1]*200])};
+  }
+  function draw(){
+    root.innerHTML=`<div class="subtabs"><button data-m="km" aria-pressed="${mode==='km'}">Clustering (k-means)</button><button data-m="tree" aria-pressed="${mode==='tree'}">Árbol de decisión</button></div><div id="s3"></div>`;
+    $$('.subtabs button',root).forEach(b=>b.onclick=()=>{mode=b.dataset.m;ran=false;draw()});
+    mode==='km'?drawKm():drawTree();
+  }
+  function drawKm(){
+    const el=$('#s3',root),X=x=>44+x/12*376,Y=y=>260-y/200*240;
+    let res=ran?kmeans(k):null;
+    el.innerHTML=`<div class="controls"><label>Grupos (k): <input type="range" id="kk" min="2" max="5" value="${k}"> <b id="kv">${k}</b></label><button class="btn btn-primary" id="kgo">Agrupar clientes</button></div>
+    <svg class="chart" viewBox="0 0 440 300" role="img" aria-label="Diagrama de dispersión de clientes por visitas y gasto">
+      <line x1="44" y1="260" x2="420" y2="260" stroke="#25382f"/><line x1="44" y1="20" x2="44" y2="260" stroke="#25382f"/>
+      <text x="232" y="290" text-anchor="middle">Visitas por mes</text><text x="12" y="140" transform="rotate(-90 12 140)" text-anchor="middle">Gasto promedio (miles COP)</text>
+      ${[0,4,8,12].map(v=>`<text x="${X(v)}" y="274" text-anchor="middle">${v}</text>`).join('')}${[0,100,200].map(v=>`<text x="38" y="${Y(v)+4}" text-anchor="end">${v}</text>`).join('')}
+      ${P.map(([x,y],i)=>`<circle cx="${X(x)}" cy="${Y(y)}" r="6" fill="${res?COL[res.A[i]]:'#6b8578'}" fill-opacity=".85"/>`).join('')}
+      ${res?res.C.map((c,j)=>`<path d="M${X(c[0])} ${Y(c[1])-10} l10 10 l-10 10 l-10 -10z" fill="none" stroke="#fff" stroke-width="2"/>`).join(''):''}
+    </svg><div class="legend" id="kl"></div><div class="explain"><b>Qué ocurre:</b> el algoritmo agrupa clientes con comportamientos parecidos sin que nadie le diga los grupos de antemano. Los rombos blancos son los centros de cada segmento. Prueba k = 2 y k = 5: ¿qué cambia en los segmentos?</div>`;
+    if(res){const mx=P.reduce((s,p)=>s+p[0],0)/P.length,my=P.reduce((s,p)=>s+p[1],0)/P.length;
+      $('#kl',el).innerHTML=res.C.map((c,j)=>`<span><i style="background:${COL[j]}"></i><b>${res.A.filter(a=>a===j).length} clientes:</b> visitas ${c[0]>mx?'frecuentes':'ocasionales'}, gasto ${c[1]>my?'alto':'bajo'}</span>`).join('')}
+    else $('#kl',el).innerHTML='<span class="hint">Sin agrupar todavía: todos los puntos son iguales para el sistema.</span>';
+    $('#kk',el).oninput=e=>{k=+e.target.value;$('#kv',el).textContent=k;if(ran)drawKm()};
+    $('#kgo',el).onclick=()=>{ran=true;drawKm()};
+  }
+  function drawTree(){
+    const el=$('#s3',root);
+    el.innerHTML=`<div class="controls"><label>Historial de pagos <select id="th"><option value="b">Bueno</option><option value="r">Regular</option><option value="m">Malo</option></select></label>
+      <label>Deuda / ingreso <input type="range" id="td" min="0" max="100" value="25"> <b id="tdv">25 %</b></label>
+      <label>Ingreso mensual <input type="range" id="ti" min="1" max="8" step=".5" value="2.5"> <b id="tiv">2,5 M</b></label></div>
+    <div class="tree"><span class="tn" data-n="n1">¿Historial de pagos?</span>
+      <div class="tb"><div><span class="bl">Malo</span><span class="tn leaf bad" data-n="l1">Rechazar</span></div>
+        <div><span class="bl">Regular o bueno</span><span class="tn" data-n="n2">¿Deuda mayor al 40 % del ingreso?</span>
+          <div class="tb"><div><span class="bl">Sí</span><span class="tn leaf warn" data-n="l2">Revisión manual</span></div>
+            <div><span class="bl">No</span><span class="tn" data-n="n3">¿Ingreso mensual de 3 M o más?</span>
+              <div class="tb"><div><span class="bl">Sí</span><span class="tn leaf" data-n="l3">Aprobar</span></div><div><span class="bl">No</span><span class="tn leaf" data-n="l4">Aprobar con cupo bajo</span></div></div></div></div></div></div></div>
+    <p id="tres" style="margin-top:1rem"></p>
+    <div class="explain"><b>Qué ocurre:</b> un árbol de decisión clasifica cada caso siguiendo preguntas de sí o no. Mueve los controles y mira qué camino se ilumina. Los umbrales (40 %, 3 M) los aprende el modelo a partir de datos históricos.</div>`;
+    const upd=()=>{
+      const h=$('#th',el).value,d=+$('#td',el).value,i=+$('#ti',el).value;
+      $('#tdv',el).textContent=d+' %';$('#tiv',el).textContent=String(i).replace('.',',')+' M';
+      let path=['n1'],res;
+      if(h==='m'){path.push('l1');res='Rechazar'}
+      else{path.push('n2');if(d>40){path.push('l2');res='Revisión manual'}else{path.push('n3');if(i>=3){path.push('l3');res='Aprobar'}else{path.push('l4');res='Aprobar con cupo bajo'}}}
+      $$('.tn',el).forEach(t=>t.classList.toggle('on',path.includes(t.dataset.n)));
+      $('#tres',el).innerHTML=`Resultado del modelo: <b>${res}</b>`;
+    };
+    $$('select,input',el).forEach(c=>c.oninput=upd);upd();
+  }
+  draw();
+}
+
+/* Etapa 4: predicción y prescripción */
+function stagePred(root){
+  const M=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic','Ene','Feb'];
+  const Y=[120,128,135,141,150,158,163,172],n=Y.length;
+  root.innerHTML=ioShell(`<label>Horizonte de predicción: <input type="range" class="hz" min="1" max="6" value="3"> <b class="hzv">3 meses</b></label>`,'Entrenar y predecir');
+  $('.in',root).innerHTML=`<p class="hint">Ventas mensuales de un producto (unidades). El modelo recibe el historial y busca la tendencia.</p>`;
+  const out=$('.out',root);let ran=false;
+  function chart(h){
+    const mx=(n-1)/2,my=Y.reduce((a,b)=>a+b,0)/n;
+    const sl=Y.reduce((a,v,i)=>a+(i-mx)*(v-my),0)/Y.reduce((a,_,i)=>a+(i-mx)**2,0),ic=my-sl*mx;
+    const sd=Math.sqrt(Y.reduce((a,v,i)=>a+(v-(ic+sl*i))**2,0)/n);
+    const F=[];for(let i=0;i<(ran?h:0);i++)F.push(ic+sl*(n+i));
+    const tot=n+F.length,top=Math.ceil(Math.max(...Y,...F.map(f=>f+sd))/20)*20+20;
+    const bw=470/tot,X=i=>40+i*bw,H=v=>230-v/top*210;
+    let s=`<svg class="chart" viewBox="0 0 520 270" role="img" aria-label="Ventas históricas y pronóstico"><line x1="40" y1="230" x2="510" y2="230" stroke="#25382f"/>`;
+    for(let v=0;v<=top;v+=top/4)s+=`<line x1="40" y1="${H(v)}" x2="510" y2="${H(v)}" stroke="#25382f" stroke-dasharray="2 4"/><text x="34" y="${H(v)+4}" text-anchor="end">${Math.round(v)}</text>`;
+    Y.forEach((v,i)=>{s+=`<rect x="${X(i)+bw*.15}" y="${H(v)}" width="${bw*.7}" height="${230-H(v)}" rx="3" fill="#3d5a4b"/><text x="${X(i)+bw/2}" y="246" text-anchor="middle">${M[i]}</text>`});
+    F.forEach((v,i)=>{const j=n+i;s+=`<rect x="${X(j)+bw*.15}" y="${H(v)}" width="${bw*.7}" height="${230-H(v)}" rx="3" fill="rgba(46,229,122,.35)" stroke="#2ee57a" stroke-dasharray="4 3"/><line x1="${X(j)+bw/2}" y1="${H(v+sd)}" x2="${X(j)+bw/2}" y2="${H(v-sd)}" stroke="#fff" stroke-width="1.5"/><text x="${X(j)+bw/2}" y="246" text-anchor="middle" style="fill:#2ee57a">${M[j]}</text>`});
+    s+='</svg>';
+    return{svg:s,F,sl,sd};
+  }
+  function draw(){
+    const h=+$('.hz',root).value;$('.hzv',root).textContent=h+(h===1?' mes':' meses');
+    const c=chart(h);
+    $('.in',root).innerHTML=`<p class="hint">Ventas mensuales (unidades). ${ran?'Las barras verdes son la predicción; la línea blanca es el rango probable.':'El modelo recibe el historial y busca la tendencia.'}</p>${c.svg}`;
+    if(!ran)return;
+    const tot=c.F.reduce((a,b)=>a+b,0);
+    out.innerHTML=tbl(['Mes','Pronóstico','Rango probable'],c.F.map((f,i)=>({cells:[M[n+i],fmt(f)+' u.',`${fmt(f-c.sd)}–${fmt(f+c.sd)}`]})))+`<div class="think" style="margin-top:.8rem;padding:.6rem .8rem;border-radius:10px;background:var(--accent-soft)"><b>Predicción:</b> las ventas crecen cerca de ${c.sl.toFixed(1).replace('.',',')} unidades por mes.<br><b>Prescripción:</b> abastece unas ${fmt(tot*1.1)} unidades para los próximos ${h} ${h===1?'mes':'meses'} (previsión más 10 % de reserva).</div>`;
+  }
+  $('.run',root).onclick=()=>{ran=true;draw()};
+  $('.hz',root).oninput=draw;
+  $('.explain',root).innerHTML='<b>Qué ocurre:</b> la <em>predicción</em> anticipa el comportamiento futuro con datos históricos; la <em>prescripción</em> va un paso más allá y recomienda qué acción tomar. Este ejemplo usa una regresión lineal simple; los modelos reales combinan muchas variables.';
+  draw();
+}
+
+/* Etapa 5: no estructurados */
+function stageUnstr(root){
+  let mode='txt';
+  const REV=['La entrega llegó rápido y la app es muy fácil de usar. ¡Excelente!','El precio me parece caro y el producto llegó dañado.','Buena calidad, pero la entrega fue lenta.','La aplicación es confusa y tardé mucho en pagar.','Excelente precio y muy buen producto, lo recomiendo.'];
+  const POS=['rápido','fácil','excelente','buena','buen','recomiendo','útil','genial'],NEG=['caro','dañado','lenta','confusa','tardé','malo','pésimo'];
+  const TOP={Entrega:['entrega','llegó'],Precio:['precio','caro'],Calidad:['calidad','producto','dañado'],App:['app','aplicación']};
+  let ran=false,ocr=false;
+  function draw(){
+    root.innerHTML=`<div class="subtabs"><button data-m="txt" aria-pressed="${mode==='txt'}">Texto con NLP</button><button data-m="img" aria-pressed="${mode==='img'}">Imagen con OCR</button></div><div id="s5"></div>`;
+    $$('.subtabs button',root).forEach(b=>b.onclick=()=>{mode=b.dataset.m;draw()});
+    mode==='txt'?txt():img();
+  }
+  function txt(){
+    const el=$('#s5',root);
+    el.innerHTML=ioShell('','Analizar con NLP');
+    $('.in',el).innerHTML=REV.map(r=>`<div class="rev">${esc(r)}</div>`).join('');
+    $('.explain',el).innerHTML='<b>Qué ocurre:</b> el NLP convierte texto libre en datos: detecta el sentimiento y el tema de cada comentario. Aquí se usa un diccionario simple; los modelos reales entienden contexto, ironía y negaciones.';
+    function run(){
+      ran=true;
+      const agg={};Object.keys(TOP).forEach(t=>agg[t]=[0,0]);
+      $('.in',el).innerHTML=REV.map(r=>{
+        const html=r.replace(/[\p{L}]+/gu,w=>{const l=w.toLowerCase();return POS.includes(l)?`<span class="kw-pos">${w}</span>`:NEG.includes(l)?`<span class="kw-neg">${w}</span>`:w});
+        return `<div class="rev">${html}</div>`}).join('');
+      REV.forEach(r=>r.split(/[,.;!¡?]|\sy\s|\spero\s/).forEach(cl=>{
+        const w=cl.toLowerCase().match(/[\p{L}]+/gu)||[],p=w.filter(x=>POS.includes(x)).length,ng=w.filter(x=>NEG.includes(x)).length;
+        Object.entries(TOP).forEach(([t,ks])=>{if(w.some(x=>ks.includes(x))){agg[t][0]+=p>0?1:0;agg[t][1]+=ng>0?1:0}})
+      }));
+      $('.out',el).innerHTML=`<p class="hint">Clasificación por tema (positivos en verde, negativos en rojo):</p><div class="bars">${Object.entries(agg).map(([t,[p,ng]])=>{const T=p+ng||1;return `<div class="bar-row"><span>${t}</span><div class="bar-track"><i style="width:${p/T*100}%;background:var(--accent)"></i><i style="width:${ng/T*100}%;background:var(--coral)"></i></div><span>${p} + / ${ng} −</span></div>`}).join('')}</div>`;
+    }
+    $('.run',el).onclick=run;
+  }
+  function img(){
+    const el=$('#s5',root);
+    el.innerHTML=ioShell('','Leer con OCR');
+    $('.in',el).innerHTML=`<div class="paper" id="paper"><div class="ln" data-f="n"><span>FACTURA N° 0045</span></div><div class="ln" data-f="f"><span>Fecha: 12/10/2026</span></div><div class="ln" data-f="c"><span>Cliente: Tienda La Esquina</span></div><div class="ln" data-f="t"><span>NIT 900.123.456-7</span></div><hr><div class="ln" data-f="s"><span>Subtotal</span><span>$100.840</span></div><div class="ln" data-f="i"><span>IVA 19 %</span><span>$19.160</span></div><div class="ln" data-f="T"><b>TOTAL</b><b>$120.000</b></div></div><p class="hint">Imagen de una factura: para la computadora son solo píxeles.</p>`;
+    $('.explain',el).innerHTML='<b>Qué ocurre:</b> la Visión por Computadora localiza el texto en la imagen (OCR), lo convierte en datos y permite validarlos. Es la base del procesamiento inteligente de documentos. Aquí la lectura es una simulación.';
+    $('.run',el).onclick=()=>{
+      $('#paper',el).classList.add('read');
+      $('.out',el).innerHTML=tbl(['Campo','Texto leído','Confianza'],[['Número','0045','99 %'],['Fecha','12/10/2026','98 %'],['Cliente','Tienda La Esquina','97 %'],['NIT','900.123.456-7','96 %'],['Subtotal','$100.840','99 %'],['IVA','$19.160','98 %'],['Total','$120.000','99 %']].map(r=>({cells:r})))+`<p style="margin-top:.6rem"><span class="chip ok">Validación</span>Subtotal + IVA = Total: $100.840 + $19.160 = $120.000</p>`;
+    };
+  }
+  draw();
+}
+
+(function(){
+  const fn={auto:stageAuto,clean:stageClean,class:stageClass,pred:stagePred,unstr:stageUnstr};
+  let cur='auto';
+  const flow=$('#flow');
+  function render(){
+    flow.innerHTML=STAGES.map(s=>`<li><button class="node" data-id="${s.id}" aria-pressed="${s.id===cur}"><span>${s.s}</span><b>${s.n}</b></button></li>`).join('');
+    $$('.node',flow).forEach(b=>b.onclick=()=>{cur=b.dataset.id;render();markDone(1)});
+    fn[cur]($('#stageBody'));
+  }
+  render();
+})();
+
+/* ---------- MÓDULO 3 ---------- */
+(function(){
+  const S=[
+    {s:'Función 1',n:'Limpieza y automatización',d:'Procesa y filtra millones de reproducciones, clics y saltos de canción en tiempo real.',i:'Reproducciones, clics y saltos de canción',o:'Señales útiles, sin ruido, listas para el modelo',q:'¿Un salto a los 5 segundos significa que la canción no te gusta, o que no era el momento?'},
+    {s:'Función 2',n:'Clasificación y segmentación',d:'Agrupa a los usuarios en comunidades según sus gustos musicales mediante algoritmos de clustering.',i:'Historial de escucha de cada usuario',o:'Comunidades de oyentes con gustos parecidos',q:'¿Qué ventaja tiene agrupar usuarios en lugar de analizar cada uno por separado?'},
+    {s:'Función 3',n:'NLP',d:'«Lee» noticias, reseñas y redes sociales para entender de qué se habla de cada artista y qué emociones transmite su música.',i:'Texto libre: noticias, reseñas, publicaciones',o:'Etiquetas de temas y emociones por artista',q:'¿Qué pasa con un artista nuevo que casi no tiene historial de escucha pero sí menciones en prensa?'},
+    {s:'Función 4',n:'Predicción y prescripción',d:'Utiliza el historial para predecir qué canciones te gustarán y recomendarte una lista personalizada cada semana.',i:'Tu historial + tu comunidad + etiquetas de los artistas',o:'Tu lista personalizada de la semana',q:'¿Cuál es la diferencia entre predecir que te gustará una canción y prescribir una lista?'}
+  ];
+  let cur=0;
+  function show(){
+    $('#spSteps').innerHTML=S.map((x,i)=>`<button class="step" data-i="${i}" aria-pressed="${i===cur}"><span>${x.s}</span><b>${x.n}</b></button>`).join('');
+    $$('.step').forEach(b=>b.onclick=()=>{cur=+b.dataset.i;show()});
+    const x=S[cur];
+    $('#spDetail').innerHTML=`<p><b>${x.n}:</b> ${x.d}</p><div class="io-line"><div><small>Entra</small>${x.i}</div><div><small>Sale</small>${x.o}</div></div><div class="think" style="margin-top:.8rem;padding:.6rem .8rem;border-radius:10px;background:var(--accent-soft)"><b>Para pensar:</b> ${x.q}</div>`;
+  }
+  show();
+
+  const GEN=['Rock','Pop','Indie','Hip-Hop','Electrónica','Salsa','Reggaetón','Jazz','Lo-fi','Clásica'];
+  const MOOD=['Energético','Nostálgico','Tranquilo','Bailable','Melancólico','Festivo'];
+  const ADJ={Rock:['Indie'],Pop:['Indie','Electrónica','Reggaetón'],Indie:['Rock','Pop','Lo-fi'],'Hip-Hop':['Lo-fi','Reggaetón'],Electrónica:['Pop','Lo-fi'],Salsa:['Jazz','Reggaetón'],Reggaetón:['Pop','Hip-Hop','Salsa'],Jazz:['Salsa','Lo-fi','Clásica'],'Lo-fi':['Jazz','Indie','Hip-Hop','Electrónica'],Clásica:['Jazz','Lo-fi']};
+  const COMM=[
+    {n:'Soñadores del indie',g:['Indie','Rock','Lo-fi']},
+    {n:'Pista de baile latina',g:['Salsa','Reggaetón','Pop']},
+    {n:'Cabina nocturna',g:['Electrónica','Pop','Hip-Hop']},
+    {n:'Estudio y calma',g:['Lo-fi','Jazz','Clásica']},
+    {n:'Calle y barrio',g:['Hip-Hop','Reggaetón','Lo-fi']}
+  ];
+  const ART=[
+    ['Luna Verde','Mapa de neón',['Indie','Pop'],['Nostálgico','Tranquilo'],['atmósfera','cálida','añoranza']],
+    ['Los Faroles','Carretera 9',['Rock','Indie'],['Energético','Nostálgico'],['guitarras','viaje','himno']],
+    ['Marea Alta','Sal y sol',['Reggaetón','Pop'],['Bailable','Festivo'],['ritmo','fiesta','verano']],
+    ['Son del Río','Cristal',['Salsa'],['Bailable','Festivo'],['sabor','orquesta','tumbao']],
+    ['Kora Nocturna','Pulso 128',['Electrónica'],['Energético','Bailable'],['sintetizadores','club','hipnótico']],
+    ['Cielo Raso','Lluvia en el balcón',['Lo-fi','Jazz'],['Tranquilo','Melancólico'],['calma','estudio','suave']],
+    ['Piano de Papel','Nocturno 3',['Clásica'],['Tranquilo','Melancólico'],['delicado','cuerdas','introspectivo']],
+    ['Vena Urbana','Concreto',['Hip-Hop'],['Energético'],['letras','crudo','barrio']],
+    ['Trío Esquina','Hora azul',['Jazz'],['Nostálgico','Tranquilo'],['improvisación','contrabajo','bar']],
+    ['Dulce Voltaje','Corazón de neón',['Pop','Electrónica'],['Bailable','Energético'],['estribillo','brillante','radio']],
+    ['Caracol Eléctrico','Domingo largo',['Indie','Lo-fi'],['Melancólico','Tranquilo'],['íntimo','lluvia','dormitorio']],
+    ['Candela Brava','Rumba de barrio',['Salsa','Reggaetón'],['Festivo','Energético'],['percusión','barrio','celebración']],
+    ['Humo y Vinilo','Tarde sin prisa',['Hip-Hop','Lo-fi'],['Tranquilo','Nostálgico'],['beats','vinilo','relajado']],
+    ['Ruta 66 Sur','Polvo y trueno',['Rock'],['Energético','Festivo'],['riffs','estadio','potente']],
+    ['Aurora Cuántica','Latido',['Electrónica','Clásica'],['Tranquilo','Melancólico'],['ambiental','cinematográfico','etéreo']],
+    ['Madrugada FM','Cartas viejas',['Pop','Indie'],['Nostálgico','Melancólico'],['letra','emotivo','voz']]
+  ].map(([a,t,g,m,k])=>({a,t,g,m,k}));
+  const selG=new Set(),selM=new Set();
+  const tags=(el,list,set,cls)=>{el.innerHTML=list.map(x=>`<button class="tag ${cls}" aria-pressed="false" data-v="${x}">${x}</button>`).join('');
+    $$('.tag',el).forEach(b=>b.onclick=()=>{const v=b.dataset.v;set.has(v)?set.delete(v):set.add(v);b.setAttribute('aria-pressed',set.has(v));upd()})};
+  function upd(){const ok=selG.size>0;$('#simGo').disabled=!ok;$('#simHint').textContent=ok?`${selG.size} ${selG.size===1?'género':'géneros'} y ${selM.size} ${selM.size===1?'ánimo':'ánimos'} seleccionados.`:'Selecciona al menos un género para empezar.'}
+  tags($('#pickG'),GEN,selG,'');tags($('#pickM'),MOOD,selM,'mood');
+
+  let timers=[];
+  $('#simGo').onclick=()=>{
+    timers.forEach(clearTimeout);timers=[];
+    const a=$('#adv').value/100,G=[...selG],M=[...selM];
+    const evs=1200+150*G.length+90*M.length,skips=Math.round(evs*.22),bots=Math.round(evs*.03),useful=evs-skips-bots;
+    const cm=COMM.map(c=>({...c,s:c.g.filter(x=>selG.has(x)).length/c.g.length})).sort((x,y)=>y.s-x.s);
+    const best=cm[0];
+    const sc=ART.map(r=>{
+      const gm=r.g.filter(x=>selG.has(x)).length/r.g.length,mm=M.length?r.m.filter(x=>selM.has(x)).length/r.m.length:0;
+      const adj=r.g.filter(x=>!selG.has(x)&&G.some(y=>(ADJ[y]||[]).includes(x))).length/r.g.length;
+      const base=.6*gm+.4*mm,nov=.5*adj+.5*mm;
+      const bonus=r.g.some(x=>best.g.includes(x))?.08:0;
+      return{...r,gm,mm,adj,score:clamp((1-a)*base+a*nov+bonus,0,1)};
+    }).sort((x,y)=>y.score-x.score);
+    const top=sc.slice(0,6);
+    const cards=[
+      `<h4><span>1.</span> Limpieza y automatización</h4><p>Señales recibidas: <b>${fmt(evs)}</b>. Descartadas por ruido (saltos de menos de 30 s): <b>${fmt(skips)}</b>. Duplicados y bots: <b>${fmt(bots)}</b>. Señales útiles: <b>${fmt(useful)}</b>.</p><p class="hint">Cifras ilustrativas.</p>`,
+      `<h4><span>2.</span> Clasificación y segmentación (clustering)</h4><p>Tu perfil encaja mejor con la comunidad <b>${best.n}</b>.</p>${cm.slice(0,3).map(c=>`<div class="sim-bar"><span>${c.n}</span><div class="track"><i style="width:${c.s*100}%"></i></div><span>${Math.round(c.s*100)} %</span></div>`).join('')}`,
+      `<h4><span>3.</span> NLP sobre reseñas y noticias</h4><p>Lo que el sistema «lee» de cada artista candidato (palabras clave y emociones; en verde las que coinciden con tu elección):</p>${top.slice(0,5).map(r=>`<div style="margin:.4rem 0"><b>${r.a}</b><br>${r.k.map(w=>`<span class="chip">${w}</span>`).join('')}${r.m.map(m=>`<span class="chip ${selM.has(m)?'ok':'sky'}">${m}</span>`).join('')}</div>`).join('')}`,
+      `<h4><span>4.</span> Predicción y prescripción: tu lista de la semana</h4>${top.map((r,i)=>{const why=[...r.g.filter(x=>selG.has(x)),...r.m.filter(x=>selM.has(x))];const nuevo=r.gm<1;return `<div class="rec"><span class="n">${i+1}</span><span><b>${r.t}</b> · ${r.a} ${nuevo?'<span class="chip warn">Descubrimiento</span>':''}</span><span class="pct">${Math.round(r.score*100)} %</span><small>${why.length?'Coincide en: '+why.join(', '):'Cercano a tus géneros ('+r.g.join(', ')+')'}</small></div>`}).join('')}<p class="hint" style="margin-top:.6rem">Prueba con otro nivel de novedad: al subirlo, aparecen artistas de géneros vecinos que todavía no escuchas.</p>`
+    ];
+    const out=$('#simOut');
+    out.innerHTML=cards.map((c,i)=>`<div class="sim-step ${reduceMotion?'':'pending'}" id="ss${i}">${c}</div>`).join('');
+    if(!reduceMotion)cards.forEach((_,i)=>timers.push(setTimeout(()=>$('#ss'+i)&&$('#ss'+i).classList.remove('pending'),i*800+200)));
+    markDone(2);
+  };
+})();
+
+/* ---------- MÓDULO 4 ---------- */
+createQuiz($('#quiz4'),[
+  {q:'¿Cuál es el beneficio central de la IA en el procesamiento de datos?',opts:['Elimina la necesidad de recolectar datos','Transforma el dato bruto en conocimiento estratégico','Sirve únicamente para almacenar información','Sustituye por completo el criterio humano'],ok:1,why:'La IA convierte datos sin procesar en conocimiento útil para decidir, que es la idea central de la conclusión.'},
+  {q:'¿Qué ventaja ofrece automatizar tareas complejas con IA?',opts:['Aumenta el margen de error humano','Obliga a revisar cada registro a mano','Reduce el margen de error humano y acelera el trabajo','Solo funciona con pocos datos'],ok:2,why:'Al automatizar, la IA procesa grandes volúmenes con rapidez y reduce los errores propios del trabajo manual.'},
+  {q:'¿En qué sectores impulsa la IA una innovación transversal?',opts:['Salud, gobierno y sectores empresariales','Solo en entretenimiento','Únicamente en la industria manufacturera','En ninguno todavía'],ok:0,why:'Su impacto abarca salud, gestión pública y empresas, por eso se habla de innovación transversal.'},
+  {q:'¿Qué cadena de funciones explica el Descubrimiento Semanal de Spotify?',opts:['Compresión, cifrado y copia de seguridad','Limpieza, clustering, NLP y predicción/prescripción','Solo OCR y reconocimiento facial','Traducción automática y generación de imágenes'],ok:1,why:'Spotify filtra señales, agrupa usuarios en comunidades, «lee» texto sobre artistas y predice qué te gustará.'},
+  {q:'¿Cuál es un ejemplo de procesamiento de datos no estructurados?',opts:['Sumar una columna numérica','Ordenar una tabla por fecha','Eliminar duplicados en una base relacional','Analizar reseñas y noticias con NLP'],ok:3,why:'El texto libre, el audio, las imágenes y el video no tienen una estructura fija; NLP y Visión por Computadora los analizan.'}
+],{onDone:()=>markDone(3),retry:'Repetir la evaluación'});
+$('#restartAll').onclick=()=>go(0);
+
+/* ---------- Inicio ---------- */
+go(0,false);
+renderClock();
+</script>
+</body>
+</html>
